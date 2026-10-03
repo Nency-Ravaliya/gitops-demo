@@ -1,7 +1,5 @@
 # GitOps Demo with Argo CD
 
-A hands-on GitOps demo using **Argo CD** + **Kubernetes (kind)** + **nginx**.
-
 Argo CD watches this Git repository and keeps your Kubernetes cluster in sync with whatever is committed here.
 
 ```
@@ -69,14 +67,32 @@ session20-control-plane  Ready    control-plane
 
 ## Step 2 — Install Argo CD
 
+### Option A — Use the install script (recommended, fixes CRD issues automatically)
+
+```bash
+./install-argocd.sh
+```
+
+This script:
+- Creates the `argocd` namespace
+- Installs Argo CD
+- Applies the `ApplicationSet` CRD correctly (avoids the common CrashLoopBackOff bug)
+- Waits until all pods are `Ready`
+
+### Option B — Manual install
+
 ```bash
 kubectl create namespace argocd
 
 kubectl apply -n argocd \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Apply the ApplicationSet CRD separately (required — avoids CrashLoopBackOff)
+curl -sL https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/applicationset-crd.yaml \
+  | kubectl apply --server-side -f -
 ```
 
-Wait for all pods to reach `Running` (takes ~2 minutes):
+Wait for all pods to reach `Running` (takes 2–5 min, images are large):
 
 ```bash
 kubectl get pods -n argocd -w
